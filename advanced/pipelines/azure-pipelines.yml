@@ -1,0 +1,43 @@
+# specific path build
+trigger:
+  branches:
+    include:
+    - main
+  paths:
+    include:
+    - advanced
+
+pr: none
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  artifact_name: sources_directory
+  working_directory: $(Agent.BuildDirectory)/${{ variables.artifact_name }}
+  project_name: terrasesadv
+
+stages:
+  - stage: Build
+    jobs:
+    - job: publish
+      displayName: Publish source directory
+      steps:
+      - publish: $(Build.SourcesDirectory)/advanced
+        artifact: sources_directory
+        displayName: Publish source directory
+
+  - template: release-stage.yml
+    parameters:
+      project_name: ${{ variables.project_name }}
+      environment: dev
+      service_connection: 'Azure MVP Sponsorship'
+      working_directory: $(working_directory)
+
+  - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+    - template: release-stage.yml
+      parameters:
+        project_name: ${{ variables.project_name }}
+        environment: prd
+        service_connection: 'Azure MVP Sponsorship'
+        working_directory: $(working_directory)

@@ -1,0 +1,20 @@
+parameters:
+  - name: service_connection
+    type: string
+  - name: working_directory
+    type: string
+    default: 'terraform'
+  - name: environment
+    type: string
+
+steps:
+  - task: TerraformCLI@0
+    displayName: Terraform plan
+    inputs:
+      command: plan
+      environmentServiceName: ${{ parameters.service_connection }}
+      publishPlanResults: ${{ parameters.environment }}
+      workingDirectory: ${{ parameters.working_directory }}
+      secureVarsFile: cloudflare.env
+      runAzLogin: true
+      commandOptions: -input=false -var-file=./config/${{ parameters.environment }}.tfvars -out=${{parameters.environment}}-tf.plan -detailed-exitcode -lock=false

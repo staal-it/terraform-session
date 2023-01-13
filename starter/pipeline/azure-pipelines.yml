@@ -1,0 +1,43 @@
+# specific path build
+trigger:
+  branches:
+    include:
+    - main
+  paths:
+    include:
+    - starter
+
+pr: none
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+  - stage: Build
+    jobs:
+    - job: publish
+      displayName: Publish source directory
+      steps:
+        - task: TerraformCLI@0
+          displayName: Terraform init
+          inputs:
+            command: init
+            backendType: azurerm
+            backendServiceArm: 'Azure MVP Sponsorship'
+            workingDirectory: $(Agent.BuildDirectory)/starter
+            ensureBackend: true
+            backendAzureRmResourceGroupName: 'rg-terrasesstar-state-dev'
+            backendAzureRmStorageAccountName: 'stterrasesstarstatedev'
+            backendAzureRmResourceGroupLocation: 'westeurope'
+            backendAzureRmStorageAccountSku: 'Standard_LRS'
+            backendAzureRmContainerName: 'terraformstate'
+            backendAzureRmKey: 'terraform.tfstate'
+
+        - task: TerraformCLI@0
+          displayName: Terraform apply
+          inputs:
+            command: apply
+            environmentServiceName: 'Azure MVP Sponsorship'
+            workingDirectory: $(Agent.BuildDirectory)/starter
+            runAzLogin: true
+            commandOptions: -input=false $(Pipeline.Workspace)/${{ variables.artifactName }}/${{parameters.environment}}-tf.plan

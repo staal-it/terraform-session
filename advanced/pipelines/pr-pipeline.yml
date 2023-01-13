@@ -1,0 +1,66 @@
+trigger: none
+
+pr:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  working_directory: ./advanced
+  project_name: terrasesadv
+  environment: dev
+  service_connection: 'Azure MVP Sponsorship'
+  terraform_backend_resource_group: rg-${{ parameters.project_name }}-state-${{ parameters.environment }}
+  terraform_backend_storage_account: st${{ parameters.project_name }}state${{ parameters.environment }}
+  terraform_backend_storage_container: terraformstate
+  terraform_statefile_name: 'terraform.tfstate'
+  location: 'westeurope'
+  python3_version: 3.9
+
+stages:
+  - stage: validateAndPlan
+    displayName: 'Validate and Plan'
+    jobs:
+    - job: validateAndPlan
+      displayName: Validate and Plan
+      steps:
+
+        - task: UsePythonVersion@0
+          inputs:
+            versionSpec: $(python3_version)
+          displayName: 'Use Python $(python3_version)'
+
+        - script: |
+            curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+          displayName: 'Install TFLint'
+
+        - script: |
+            curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
+          displayName: 'Install TFSec'
+
+        - script: |
+            python3 -m pip install --upgrade pip
+            python3 -m pip install pre-commit
+            pre-commit install
+          displayName: 'Install pre-commit'
+
+        - script: |
+            pre-commit run --all-files
+          displayName: 'Run pre-commit'
+          workingDirectory: ${{ variables.working_directory }}
+
+        - template: task/init.yml
+          parameters:
+            service_connection: ${{ variables.service_connection }}
+            resourceGroup: ${{ variables.terraform_backend_resource_group }}
+            storageAccount: ${{ variables.terraform_backend_storage_account }}
+            containerName: ${{ variables.terraform_backend_storage_container }}
+            terraformStateKey: ${{ variables.terraform_statefile_name }}
+            working_directory: ${{ variables.working_directory }}
+
+        - template: task/plan.yml
+          parameters:
+            service_connection: ${{ variables.service_connection }}
+            working_directory: ${{ variables.working_directory }}
+            environment: ${{ variables.environment }}
