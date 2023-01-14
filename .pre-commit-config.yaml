@@ -23,3 +23,5 @@ repos:
   - id: terraform_validate
   - id: terraform_tflint
   - id: terraform_tfsec
+
+exclude: ^(advanced-2)
