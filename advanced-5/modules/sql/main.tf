@@ -40,8 +40,10 @@ resource "azurerm_mssql_server_extended_auditing_policy" "audit" {
 }
 
 resource "azurerm_mssql_database" "sql_database" {
-  name      = "sqldb-${var.project_name}-${var.environment}"
-  server_id = azurerm_mssql_server.sql_server.id
+  name                 = "sqldb-${var.project_name}-${var.environment}"
+  server_id            = azurerm_mssql_server.sql_server.id
+  sku_name             = "Basic"
+  storage_account_type = "Local"
 }
 
 // Using the azurerm_key_vault_secret resource to store the connection string in the key vault

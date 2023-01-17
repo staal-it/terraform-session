@@ -41,4 +41,4 @@ resource "cloudflare_record" "cname-record" {
   ttl     = 3600
 }
 
-// Add custom hostname binding
+// create custom hostname binding

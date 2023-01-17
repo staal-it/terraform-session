@@ -148,8 +148,10 @@ resource "azurerm_mssql_server_extended_auditing_policy" "audit" {
 }
 
 resource "azurerm_mssql_database" "sql_database" {
-  name      = "sqldb-${local.project_name}-${var.environment}"
-  server_id = azurerm_mssql_server.sql_server.id
+  name                 = "sqldb-${local.project_name}-${var.environment}"
+  server_id            = azurerm_mssql_server.sql_server.id
+  sku_name             = "Basic"
+  storage_account_type = "Local"
 }
 
 resource "azurerm_key_vault_secret" "sql_server_connection_string" {
